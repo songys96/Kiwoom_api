@@ -9,7 +9,7 @@ class Order(QWidget):
     각각의 특성에 맞는 GUI 모듈의 집합체 형식으로 만들었다.
     """
     def __init__(self, parent):
-        super().__init__()
+        super(Order, self).__init__(parent)
 
         self.title = QLabel("수동주문", self)
         self.account_label = QLabel("계좌", self)
