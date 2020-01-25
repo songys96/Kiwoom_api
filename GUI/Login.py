@@ -4,7 +4,7 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QAxContainer import *
 
-class LoginGUI(QMainWindow):
+class Login(QMainWindow):
     def __init__(self):
         """
         버튼을 누를경우 로그인 창이 뜨는 다이얼로그
@@ -28,8 +28,10 @@ class LoginGUI(QMainWindow):
 
     def login(self):
         ret = self.kiwoom.dynamicCall("CommConnect()")
+        self.statusBar().showMessage("ret{}".format(ret))
 
     def checkConnection(self):
+        self.statusBar().showMessage("Here")
         if self.kiwoom.dynamicCall("GetConnectState()") == 0:
             self.statusBar().showMessage("Not Connected")
         else:
@@ -37,7 +39,7 @@ class LoginGUI(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    myWindow = LoginGUI()
+    myWindow = Login()
     myWindow.show()
     app.exec_()
 
