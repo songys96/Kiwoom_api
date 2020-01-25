@@ -17,6 +17,7 @@ class Kiwoom(QAxWidget):
     # 서버에 연결시 메서드 실행 슬롯(이벤트) 지정
     def _set_signal_slots(self):
         self.OnEventConnect.connect(self._event_connect)
+        self.OnReceiveChejanData.connect(self._receive_chejan_data)
 
     # 메서드 실행시 서버에 연결
     def comm_connect(self):
@@ -63,7 +64,6 @@ class Kiwoom(QAxWidget):
     def set_input_value(self, id, value):
         self.dynamicCall("SetInputValue(QString, QString)", id, value)
 
-    
     # 요청하기
     # input(rqname:사용자구분명, trcode:Tran명, next:0-조회, 2-연속, screen_no:4자리화면번호)
     def comm_rq_data(self, rqname, trcode, next, screen_no):
@@ -80,11 +80,13 @@ class Kiwoom(QAxWidget):
         return ret.strip()
 
     # 총 몇개의 데이터가 왔는지 확인
+    # rqcode = requestcode 확인하고자 하는 정보코드의 요청을 보낸다
+    # opt10001 : 주식기본정보 요청
     def _get_repeat_cnt(self, trcode, rqname):
         ret = self.dynamicCall("GetRepeatCnt(QString, Qstring)", trcode, rqname)
         return ret
 
-    # 
+    # tr은 서버로부터 데이터를 주고받는 행위
     def _receive_tr_data(self, screen_no, rqname, record_name, next, unused1, unused2, unused3, unused4):
         if next == "2":
             self.remained_data = True
@@ -117,8 +119,29 @@ class Kiwoom(QAxWidget):
             self.ohlcv['close'].append(int(close))
             self.ohlcv['volume'].append(int(volume))
 
+    # 주문하는 메서드 1번
+    # 이벤트루프로 기다려줘야함
+    def send_order(self, rqname, screen_no, acc_no, order_type, code, quantity, price, hoga, order_no):
+        self.dynamicCall("SendOrder(QString, QString, QString, int, QString, int, int, QString, QString)",\
+            [rqname, screen_no, acc_no, order_type, code, quantity, price, hoga, order_no])
 
+    # 체결잔고 데이터를 가져오는 메서드 3번
+    def get_chejan_data(self, fid):
+        ret = self.dynamicCall("GetChejanData(int)", fid)
+        return ret
 
+    # 체결데이터 확인 2번
+    def _receive_chejan_data(self, gubun, item_cnt, fid_list):
+        # 904:원주문번호 905:주문구분 908:체결시간 909:체결번호 910:체결가 911:체결량 10:현재가
+        print(gubun)
+        print(self.get_chejan_data(9203)) # 주문번호
+        print(self.get_chejan_data(302)) # 종목명
+        print(self.get_chejan_data(900)) # 주문수량
+        print(self.get_chejan_data(901)) # 미체결수량
+
+    def get_login_info(self, tag):
+        ret = self.dynamicCall("GetLoginInfo(QString)", tag)
+        return ret
 
 """
 # 여기는 단일 실행시 필요

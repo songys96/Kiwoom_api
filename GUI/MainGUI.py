@@ -23,7 +23,6 @@ class MainGUI(QWidget):
 
         self.adjustSize()
 
-
         self.layout = QGridLayout(self)
         self.layout.addWidget(self.order, 0, 0, 1, 1)
         self.layout.addWidget(self.account, 0, 1, 2, 1)
