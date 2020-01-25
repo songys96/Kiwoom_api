@@ -47,9 +47,15 @@ class Kiwoom(QAxWidget):
         code_list = code_list.split(";")
         return code_list[:-1]
 
-    # 
+    # ?
     def get_master_code_name(self, code):
         code_name = self.dynamicCall("GetMasterCodeName(QString)", code)
+        return code_name
+
+    # 현재상태 출력
+    def get_connect_state(self):
+        ret = self.dynamicCall("GetConnectState()")
+        return ret
 
     # 찾고자 하는 정보를 입력한다
     # id : 종목코드, 계좌번호등 value:000660, 5015123401...
@@ -57,9 +63,10 @@ class Kiwoom(QAxWidget):
     def set_input_value(self, id, value):
         self.dynamicCall("SetInputValue(QString, QString)", id, value)
 
+    
     # 요청하기
     # input(rqname:사용자구분명, trcode:Tran명, next:0-조회, 2-연속, screen_no:4자리화면번호)
-    def comm_rq_data(self, rqname, trcode, next, screen_no)
+    def comm_rq_data(self, rqname, trcode, next, screen_no):
         # 이부분 닫는거 좀 이상함 17-3-2 일봉데이터연속조회 부분
         self.dynamicCall("CommRqData(QString, QString, int, QString)",rqname, trcode, next, screen_no)
         # ***PyQt에는 이벤트루프가 이미 있음
@@ -100,7 +107,7 @@ class Kiwoom(QAxWidget):
             open = self._comm_get_data(trcode, "", rqname, i, "시가")
             high = self._comm_get_data(trcode, "", rqname, i, "고가")
             low = self._comm_get_data(trcode, "", rqname, i, "저가")
-            close = self._comm_get_data(trcode, "", rqname, i, "현재가"")
+            close = self._comm_get_data(trcode, "", rqname, i, "현재가")
             volume = self._comm_get_data(trcode, "", rqname, i, "거래량")
             
             self.ohlcv['date'].append(date)
@@ -118,7 +125,7 @@ class Kiwoom(QAxWidget):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     kiwoom = Kiwoom()
-    kiwoom.comm_connect()
+     kiwoom.comm_connect()
 
     kiwoom.ohlcv = {'data':[], 'open':[], 'high':[], 'low':[], 'close':[], 'volume':[]}
     
