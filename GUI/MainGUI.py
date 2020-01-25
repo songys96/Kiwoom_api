@@ -6,6 +6,7 @@ from PyQt5.QtCore import  *
 from PyQt5.QAxContainer import *
 
 from .Order import Order
+from .Account import Account
 
 HELP = "https://doc.qt.io/qtforpython/PySide2/QtWidgets/index.html#module-PySide2.QtWidgets"
 
@@ -16,11 +17,14 @@ class MainGUI(QWidget):
     def __init__(self, parent):
         super(MainGUI, self).__init__(parent)
         self.order = Order(self)
-        self.focusWidget()
+        self.account = Account(self)
+        
+        self.status_bar = QStatusBar(self)
+
         self.adjustSize()
 
-        self.status_bar = QStatusBar(self)
 
         self.layout = QGridLayout(self)
         self.layout.addWidget(self.order, 0, 0, 1, 1)
-        self.layout.addWidget(self.status_bar, 1, 0, 1, 1)
+        self.layout.addWidget(self.account, 0, 1, 2, 1)
+        self.layout.addWidget(self.status_bar, 2, 0, 1, 1)
