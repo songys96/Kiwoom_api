@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QAxContainer import *
@@ -101,7 +102,13 @@ class Kiwoom(QAxWidget):
             low = self._comm_get_data(trcode, "", rqname, i, "저가")
             close = self._comm_get_data(trcode, "", rqname, i, "현재가"")
             volume = self._comm_get_data(trcode, "", rqname, i, "거래량")
-            print(data, open, high, low, close, volume)
+            
+            self.ohlcv['date'].append(date)
+            self.ohlcv['open'].append(int(open))
+            self.ohlcv['high'].append(int(high))
+            self.ohlcv['low'].append(int(low))
+            self.ohlcv['close'].append(int(close))
+            self.ohlcv['volume'].append(int(volume))
 
 
 
@@ -112,6 +119,8 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     kiwoom = Kiwoom()
     kiwoom.comm_connect()
+
+    kiwoom.ohlcv = {'data':[], 'open':[], 'high':[], 'low':[], 'close':[], 'volume':[]}
     
     kiwoom.set_input_value("종목코드", "039490")
     kiwoom.set_input_value("기준일자", "20170224")
@@ -124,4 +133,9 @@ if __name__ == "__main__":
         kiwoom.set_input_value("기준일자", "20170224")
         kiwoom.set_input_value("수정주가구분", 1)
         kiwoom.comm_rq_data("opt10081_req", "opt10081", 2, "0101")
+
+    df pd.DataFrame(kiwoom.ohlcv, column=['open','high', 'low', 'close', 'volume'], index=kiwoom.ohlcv['date'])
+
+    con = sqlite3.connect("./stock.db")
+    df.to_sql(;039490', con, if_exists='replace')
 """
