@@ -30,9 +30,15 @@ class Main(QMainWindow):
         self.ui.account.load_btn.clicked.connect(self.check_balance)
 
     def check_time(self):
-        self.timer = QTimer(self)
-        self.timer.start(1000)
-        self.timer.timeout.connect(self.timeout)
+        self.timer_time = QTimer(self)
+        self.timer_time.start(1000)
+        self.timer_time.timeout.connect(self.timeout)
+        
+        # 10초에 한번씩 보유현황 리로드
+        self.timer_load = QTimer(self)
+        self.timer_load.start(1000*10)
+        if self.ui.account.realtime_check.isChecked():
+            self.timer_load.timeout.connect(self.check_balance)
     
     def timeout(self):
         current_time = QTime.currentTime()
@@ -75,9 +81,11 @@ class Main(QMainWindow):
         self.kiwoom.send_order("send_order_req", "0101", account, order_type_lookup[order_type],\
             code, num, price, hoga_lookup[hoga], "")
 
+    # 잔고와 보유 현황을 로드하는 것.
     def check_balance(self):
         from GUI.Account import Account
-
+        from GUI.Selected import Selected
+        """
         self.kiwoom.reset_opw00018_output()
         account_number = self.kiwoom.get_login_info("ACCNO")
         account_number = account_number.split(';')[0]
@@ -94,13 +102,39 @@ class Main(QMainWindow):
         self.kiwoom.set_input_value("계좌번호", account_number)
         self.kiwoom.comm_rq_data("opw00001_req", "opw00001", 0, "2000")
         
-        itemLists = [] # == ["예수금(d+2)", "총매입", "총평가", "총손익", "총수익률", "추정자산"]
-        itemLists.append(self.kiwoom.d2_deposit)
-        itemLists += self.kiwoom.opw00018_output['single']
-        Account.appendAccountItem(self.ui.account, itemLists)
-
-
+        # 계좌 테이블 채우기
+        account_item_lists = [] # == ["예수금(d+2)", "총매입", "총평가", "총손익", "총수익률", "추정자산"]
+        account_item_lists.append(self.kiwoom.d2_deposit)
+        account_item_lists += self.kiwoom.opw00018_output['single']
+        Account.appendAccountItem(self.ui.account, account_item_lists)
         
+        # 보유주식현황 채우기
+        stock_item_list = self.kiwoom.opw00018_output['multi']
+        Account.appendStockItem(self.ui.account, stock_item_list)
+        """
+        # 선정된 종목 채우기
+        # it should be a method of cls
+        f =  open("ex_sell_list.txt", "r", encoding="utf-8")
+        lists = f.readlines()
+        f.close()
+        for line in lists:
+            item = line.split(';')
+            #item[1] = self.kiwoom.get_master_code_name(item[1].rsplit())
+            Selected.appendSelectedItem(self.ui.selected, item)
+
+    # 선택된 종목 자동 주문시키기
+    def trade_stocks(self):
+        hoga_lookup = {"지정가": "00", "시장가": "03"}
+
+        f = open("ex_sell_list.txt", "r", encoding="utf-8")
+        sell_lists = f.readlines()
+        f.close()
+
+        f = open("ex_buy_list.txt", "r", encoding="utf-8")
+        buy_lists = f.readlines()
+        f.close()
+        
+
 
     
 

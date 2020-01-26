@@ -11,8 +11,6 @@ class Account(QWidget):
     def __init__(self, parent):
         super(Account, self).__init__(parent)
         
-        self.setFixedWidth(700)
-
         self.title = QLabel("잔고 및 보유현황", self)
         self.account_labels = ["예수금(d+2)", "총매입", "총평가", "총손익", "총수익률", "추정자산"]
         self.account_table = QTableWidget(self)
@@ -46,8 +44,10 @@ class Account(QWidget):
             item = QTableWidgetItem(itemLists[i])
             item.setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
             self.account_table.setItem(Account.accountRows, i, item)
+            self.account_table.resizeRowsToContents()
         Account.accountRows += 1
-            
+        
+    @staticmethod   
     def appendStockItem(self, itemLists):
         #itemLists = ["종목명", "보유량", "매입가", "현재가", "평가손익", "수익률"]
         self.stock_table.insertRow(Account.stockRows)
@@ -55,4 +55,5 @@ class Account(QWidget):
             item = QTableWidgetItem(itemLists[i])
             item.setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
             self.stock_table.setItem(Account.stockRows, i, item)
+            self.stock_table.resizeRowsToContents()
         Account.stockRows += 1
