@@ -7,6 +7,7 @@ from PyQt5.QtCore import *
 
 from GUI.MainGUI import MainGUI
 from Kiwoom import Kiwoom
+from utils import change_money_format
 
 class Main(QMainWindow):
     def __init__(self):
@@ -23,9 +24,10 @@ class Main(QMainWindow):
 
     def _init_events(self):
         self.check_time()
-        self.setAccountInfo()
+        #self.setAccountInfo()
         self.ui.order.item_edit.textChanged.connect(self.code_change)
         self.ui.order.order_btn.clicked.connect(self.send_order)
+        self.ui.account.load_btn.clicked.connect(self.check_balance)
 
     def check_time(self):
         self.timer = QTimer(self)
@@ -73,8 +75,34 @@ class Main(QMainWindow):
         self.kiwoom.send_order("send_order_req", "0101", account, order_type_lookup[order_type],\
             code, num, price, hoga_lookup[hoga], "")
 
+    def check_balance(self):
+        from GUI.Account import Account
+
+        self.kiwoom.reset_opw00018_output()
+        account_number = self.kiwoom.get_login_info("ACCNO")
+        account_number = account_number.split(';')[0]
+
+        # 기본정보 가져오기
+        self.kiwoom.set_input_value("계좌번호", account_number)
+        self.kiwoom.comm_rq_data("opw00018_req", "opw00018", 2, "2000")
+        # 추가 정보 있을시 없을때까지 반복
+        while self.kiwoom.remained_data:
+            time.sleep(0.2)
+            self.kiwoom.set_input_value("계좌번호", account_number)
+            self.kiwoom.comm_rq_data("opw00018_req", "opw00018", 2, "2000")
+        # 예수금은 따로 가져오기
+        self.kiwoom.set_input_value("계좌번호", account_number)
+        self.kiwoom.comm_rq_data("opw00001_req", "opw00001", 0, "2000")
+        
+        itemLists = [] # == ["예수금(d+2)", "총매입", "총평가", "총손익", "총수익률", "추정자산"]
+        itemLists.append(self.kiwoom.d2_deposit)
+        itemLists += self.kiwoom.opw00018_output['single']
+        Account.appendAccountItem(self.ui.account, itemLists)
 
 
+        
+
+    
 
 
 

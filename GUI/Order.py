@@ -10,6 +10,7 @@ class Order(QWidget):
     """
     def __init__(self, parent):
         super(Order, self).__init__(parent)
+        self.setFixedWidth(250)
 
         self.title = QLabel("수동주문", self)
         self.account_label = QLabel("계좌", self)

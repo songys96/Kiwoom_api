@@ -3,13 +3,16 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import  *
 from PyQt5.QAxContainer import *
+from PyQt5.QtCore import *
 
 class Account(QWidget):
     accountRows = 0
     stockRows = 0
     def __init__(self, parent):
         super(Account, self).__init__(parent)
-        self.adjustSize()
+        
+        self.setFixedWidth(700)
+
         self.title = QLabel("잔고 및 보유현황", self)
         self.account_labels = ["예수금(d+2)", "총매입", "총평가", "총손익", "총수익률", "추정자산"]
         self.account_table = QTableWidget(self)
@@ -23,35 +26,33 @@ class Account(QWidget):
         self.stock_table.setColumnCount(6)
         self.stock_table.setHorizontalHeaderLabels(self.stock_labels)
 
+        self.realtime_check = QCheckBox("실시간 조회",self)
+        self.load_btn = QPushButton("조회", self)
+
         self.layout = QGridLayout(self)
         self.layout.addWidget(self.title, 0, 0, 1, 1)
-        self.layout.addWidget(self.account_table, 1, 0, 1, 1)
-        self.layout.addWidget(self.stock_table, 2, 0, 1, 1)
+        self.layout.addWidget(self.account_table, 1, 0, 1, 5)
+        self.layout.addWidget(self.stock_table, 2, 0, 3, 5)
+        self.layout.addWidget(self.realtime_check, 5, 3, 1, 1)
+        self.layout.addWidget(self.load_btn, 5, 4, 1, 1)
 
-    def appendAccountItem(self, changes, total_buy, total_estimation, total_diff, total_profit, assets):
+    # 사실상 필요없는 줄이지만 이용합시다. 한줄만 필요함......(계좌는 한개씩만 읽으니까...)
+    @staticmethod
+    def appendAccountItem(self, itemLists):
         # all item should be str
-        items = []
-        items.append(QTableWidgetItem(changes))
-        items.append(QTableWidgetItem(total_buy))
-        items.append(QTableWidgetItem(total_estimation))
-        items.append(QTableWidgetItem(total_diff))
-        items.append(QTableWidgetItem(total_profit))
-        items.append(QTableWidgetItem(assets))
+        # itemLists = ["예수금(d+2)", "총매입", "총평가", "총손익", "총수익률", "추정자산"]
         self.account_table.insertRow(Account.accountRows)
-        for i in range(len(items)):
-            self.account_table.setItem(Account.accountRows, i, items[i])
+        for i in range(len(itemLists)):
+            item = QTableWidgetItem(itemLists[i])
+            item.setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
+            self.account_table.setItem(Account.accountRows, i, item)
         Account.accountRows += 1
             
-    def appendStockItem(self, name, count, buy, current, estimate, profit):
-        items = []
-        items.append(QTableWidgetItem(name))
-        items.append(QTableWidgetItem(count))
-        items.append(QTableWidgetItem(buy))
-        items.append(QTableWidgetItem(current))
-        items.append(QTableWidgetItem(estimate))
-        items.append(QTableWidgetItem(profit))
+    def appendStockItem(self, itemLists):
+        #itemLists = ["종목명", "보유량", "매입가", "현재가", "평가손익", "수익률"]
         self.stock_table.insertRow(Account.stockRows)
-        for i in range(len(items)):
-            self.stock_table.setItem(Account.stockRows, i, items[i])
+        for i in range(len(itemLists)):
+            item = QTableWidgetItem(itemLists[i])
+            item.setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
+            self.stock_table.setItem(Account.stockRows, i, item)
         Account.stockRows += 1
-        

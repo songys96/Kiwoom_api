@@ -21,9 +21,7 @@ class MainGUI(QWidget):
         
         self.status_bar = QStatusBar(self)
 
-        self.adjustSize()
-
         self.layout = QGridLayout(self)
         self.layout.addWidget(self.order, 0, 0, 1, 1)
-        self.layout.addWidget(self.account, 0, 1, 2, 1)
-        self.layout.addWidget(self.status_bar, 2, 0, 1, 1)
+        self.layout.addWidget(self.account, 0, 1, 3, 2)
+        self.layout.addWidget(self.status_bar, 3, 0, 1, 1)
