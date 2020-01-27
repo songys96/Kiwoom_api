@@ -15,7 +15,7 @@ class Main(QMainWindow):
         self.setWindowTitle("Song's Trader")
         self.ui = MainGUI(self)
         self.setCentralWidget(self.ui) # gui를 변수로 받고 중심위젯으로 해주는게 핵심이네..
-        
+        self.trade_stocks_done = False
         # 키움 인스턴스 생성
         #self.kiwoom = Kiwoom()
         #self.kiwoom.comm_connect()
@@ -41,10 +41,17 @@ class Main(QMainWindow):
             self.timer_load.timeout.connect(self.check_balance)
     
     def timeout(self):
+        market_start_time = QTime(9, 0, 0)
         current_time = QTime.currentTime()
+
+        if current_time > market_start_time and self.trade_stocks_done is False:
+            self.trade_stocks()
+            self.trade_stocks_done = True
+
         text_time = current_time.toString("hh:mm:ss")
         self.time_msg = "현재시간: {}".format(text_time)
         self.ui.status_bar.showMessage(self.time_msg)
+        self.check_state()
 
     def check_state(self):
         state = self.kiwoom.get_connect_state()
@@ -127,14 +134,56 @@ class Main(QMainWindow):
         hoga_lookup = {"지정가": "00", "시장가": "03"}
 
         f = open("ex_sell_list.txt", "r", encoding="utf-8")
-        sell_lists = f.readlines()
+        sell_list = f.readlines()
         f.close()
 
         f = open("ex_buy_list.txt", "r", encoding="utf-8")
-        buy_lists = f.readlines()
+        buy_list = f.readlines()
         f.close()
-        
 
+        account = self.ui.account.account_combo.currentText()
+
+        #buy list
+        for row_data in buy_list:
+            split_row_data = row_data.split(';')
+            hoga = split_row_data[2]
+            code = split_row_data[1]
+            num = split_row_data[3]
+            price = split_row_data[4]
+
+            if split_row_data[-1].rstrip() == '매수전':
+                self.kiwoom.send_order("send_order_req", "0101", account, 1, code, num, price, hoga_lookup[hoga], "")
+
+        # sell list
+        for row_data in sell_list:
+            split_row_data = row_data.split(';')
+            hoga = split_row_data[2]
+            code = split_row_data[1]
+            num = split_row_data[3]
+            price = split_row_data[4]
+
+            if split_row_data[-1].rstrip() == '매도전':
+                self.kiwoom.send_order("send_order_req", "0101", account, 2, code, num, price, hoga_lookup[hoga], "")
+        
+        # buy list
+        for i, row_data in enumerate(buy_list):
+            buy_list[i] = buy_list[i].replace("매수전", "주문완료")
+
+        # file update
+        f = open("buy_list.txt", 'wt')
+        for row_data in buy_list:
+            f.write(row_data)
+        f.close()
+
+        # sell list
+        for i, row_data in enumerate(sell_list):
+            sell_list[i] = sell_list[i].replace("매도전", "주문완료")
+
+        # file update
+        f = open("sell_list.txt", 'wt')
+        for row_data in sell_list:
+            f.write(row_data)
+        f.close()
 
     
 
