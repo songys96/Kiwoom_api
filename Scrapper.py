@@ -1,5 +1,6 @@
 import sys
 import time
+import datetime
 from pandas import DataFrame
 
 from PyQt5.QtWidgets import *
@@ -15,8 +16,17 @@ class Scrapper:
         self.get_code_list()
 
     def run(self):
-        df = self.get_ohlcv("039490", "20170321")
-        print(df)
+        # 코스닥 한바퀴 돌기
+        buy_list = []
+        num = len(self.kosdaq_codes)
+
+        for i, code in enumerate(self.kosdaq_codes):
+            print("{}/{}".format(i, num))
+            if self.check_speedy_rising_volume(code):
+                print("{}는 급등주".format(code))
+                buy_list.append(code)
+        self.update_buy_list(buy_list)
+                
 
     def get_code_list(self):
         self.kospi_codes = self.kiwoom.get_code_list_by_market(MARKET_KOSPI)
@@ -34,9 +44,34 @@ class Scrapper:
         df = DataFrame(self.kiwoom.ohlcv, columns = ['open', "high", "low", "close", "volume"], index=self.kiwoom.ohlcv['date'])
         return df
 
+    def check_speedy_rising_volume(self, code):
+        today = datetime.datetime.today().strftime("%Y%m%d")
+        df = self.get_ohlcv(code, today)
+        volumes = df['volume']
 
+        if len(volumes) < 21:
+            return False
 
+        sum_vol20 = 0
+        today_vol = 0
 
+        for i, vol in enumerate(volumes):
+            if i == 0:
+                today_vol = vol
+            elif 1 <= i <= 20:
+                sum_vol20 += vol
+            else:
+                break
+
+            avg_vol20 = sum_vol20 / 20
+            if today_vol > avg_vol20 * 10:
+                return True
+
+    def update_buy_list(self, buy_list):
+        f = open("ex_buy_lists.txt", "w")
+        for code in buy_list:
+            f.writelines("매수;{};시장가;10;0;매수전\n".format(str(code)))
+        f.close()
 
 
 
