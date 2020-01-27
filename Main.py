@@ -19,10 +19,12 @@ class Main(QMainWindow):
         # 키움 인스턴스 생성
         #self.kiwoom = Kiwoom()
         #self.kiwoom.comm_connect()
-        #self.check_state()
         self._init_events()
+        
 
     def _init_events(self):
+        #self.check_state()
+        self.load_buy_sell()
         self.check_time()
         #self.setAccountInfo()
         self.ui.order.item_edit.textChanged.connect(self.code_change)
@@ -44,14 +46,14 @@ class Main(QMainWindow):
         market_start_time = QTime(9, 0, 0)
         current_time = QTime.currentTime()
 
-        if current_time > market_start_time and self.trade_stocks_done is False:
-            self.trade_stocks()
-            self.trade_stocks_done = True
+        #if current_time > market_start_time and self.trade_stocks_done is False:
+        #    self.trade_stocks()
+        #    self.trade_stocks_done = True
 
         text_time = current_time.toString("hh:mm:ss")
         self.time_msg = "현재시간: {}".format(text_time)
         self.ui.status_bar.showMessage(self.time_msg)
-        self.check_state()
+        #self.check_state()
 
     def check_state(self):
         state = self.kiwoom.get_connect_state()
@@ -91,7 +93,6 @@ class Main(QMainWindow):
     # 잔고와 보유 현황을 로드하는 것.
     def check_balance(self):
         from GUI.Account import Account
-        from GUI.Selected import Selected
         """
         self.kiwoom.reset_opw00018_output()
         account_number = self.kiwoom.get_login_info("ACCNO")
@@ -119,13 +120,26 @@ class Main(QMainWindow):
         stock_item_list = self.kiwoom.opw00018_output['multi']
         Account.appendStockItem(self.ui.account, stock_item_list)
         """
+
+    def load_buy_sell(self):        
+        from GUI.Selected import Selected
         # 선정된 종목 채우기
         # it should be a method of cls
-        f =  open("ex_sell_list.txt", "r", encoding="utf-8")
-        lists = f.readlines()
+        f =  open("ex_buy_list.txt", "r", encoding="utf-8")
+        buy_list = f.readlines()
         f.close()
-        for line in lists:
-            item = line.split(';')
+
+        f =  open("ex_sell_list.txt", "r", encoding="utf-8")
+        sell_list = f.readlines()
+        f.close()
+
+        for item_info in buy_list:
+            item = item_info.split(';')
+            #item[1] = self.kiwoom.get_master_code_name(item[1].rsplit())
+            Selected.appendSelectedItem(self.ui.selected, item)
+            
+        for item_info in sell_list:
+            item = item_info.split(';')
             #item[1] = self.kiwoom.get_master_code_name(item[1].rsplit())
             Selected.appendSelectedItem(self.ui.selected, item)
 
@@ -141,7 +155,7 @@ class Main(QMainWindow):
         buy_list = f.readlines()
         f.close()
 
-        account = self.ui.account.account_combo.currentText()
+        account = self.ui.order.account_combo.currentText()
 
         #buy list
         for row_data in buy_list:
