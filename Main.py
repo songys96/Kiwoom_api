@@ -17,16 +17,17 @@ class Main(QMainWindow):
         self.setCentralWidget(self.ui) # gui를 변수로 받고 중심위젯으로 해주는게 핵심이네..
         self.trade_stocks_done = False
         # 키움 인스턴스 생성
-        #self.kiwoom = Kiwoom()
-        #self.kiwoom.comm_connect()
+        self.kiwoom = Kiwoom()
+        self.kiwoom.comm_connect()
         self._init_events()
         
 
     def _init_events(self):
-        #self.check_state()
+        self.check_timeout()
         self.load_buy_sell()
         self.check_time()
-        #self.setAccountInfo()
+        self.setAccountInfo()
+        self.check_balance()
         self.ui.order.item_edit.textChanged.connect(self.code_change)
         self.ui.order.order_btn.clicked.connect(self.send_order)
         self.ui.account.load_btn.clicked.connect(self.check_balance)
@@ -34,7 +35,7 @@ class Main(QMainWindow):
     def check_time(self):
         self.timer_time = QTimer(self)
         self.timer_time.start(1000)
-        self.timer_time.timeout.connect(self.timeout)
+        self.timer_time.timeout.connect(self.check_timeout)
         
         # 10초에 한번씩 보유현황 리로드
         self.timer_load = QTimer(self)
@@ -42,7 +43,7 @@ class Main(QMainWindow):
         if self.ui.account.realtime_check.isChecked():
             self.timer_load.timeout.connect(self.check_balance)
     
-    def timeout(self):
+    def check_timeout(self):
         market_start_time = QTime(9, 0, 0)
         current_time = QTime.currentTime()
 
@@ -53,7 +54,7 @@ class Main(QMainWindow):
         text_time = current_time.toString("hh:mm:ss")
         self.time_msg = "현재시간: {}".format(text_time)
         self.ui.status_bar.showMessage(self.time_msg)
-        #self.check_state()
+        self.check_state()
 
     def check_state(self):
         state = self.kiwoom.get_connect_state()
@@ -93,23 +94,22 @@ class Main(QMainWindow):
     # 잔고와 보유 현황을 로드하는 것.
     def check_balance(self):
         from GUI.Account import Account
-        """
         self.kiwoom.reset_opw00018_output()
         account_number = self.kiwoom.get_login_info("ACCNO")
         account_number = account_number.split(';')[0]
+        print(account_number)
 
         # 기본정보 가져오기
         self.kiwoom.set_input_value("계좌번호", account_number)
-        self.kiwoom.comm_rq_data("opw00018_req", "opw00018", 2, "2000")
+        self.kiwoom.comm_rq_data("opw00018_req", "opw00018", 0, "0001")
         # 추가 정보 있을시 없을때까지 반복
         while self.kiwoom.remained_data:
             time.sleep(0.2)
             self.kiwoom.set_input_value("계좌번호", account_number)
-            self.kiwoom.comm_rq_data("opw00018_req", "opw00018", 2, "2000")
-        # 예수금은 따로 가져오기
+            self.kiwoom.comm_rq_data("opw00018_req", "opw00018", 0, "2000")
+        # 예수금은 따로 가져오기 
         self.kiwoom.set_input_value("계좌번호", account_number)
         self.kiwoom.comm_rq_data("opw00001_req", "opw00001", 0, "2000")
-        
         # 계좌 테이블 채우기
         account_item_lists = [] # == ["예수금(d+2)", "총매입", "총평가", "총손익", "총수익률", "추정자산"]
         account_item_lists.append(self.kiwoom.d2_deposit)
@@ -119,7 +119,6 @@ class Main(QMainWindow):
         # 보유주식현황 채우기
         stock_item_list = self.kiwoom.opw00018_output['multi']
         Account.appendStockItem(self.ui.account, stock_item_list)
-        """
 
     def load_buy_sell(self):        
         from GUI.Selected import Selected

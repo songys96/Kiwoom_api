@@ -31,6 +31,7 @@ class Order(QWidget):
         self.price_label = QLabel("가격", self)
         self.price_spin = QSpinBox(self)
         self.price_spin.setMinimum(0)
+        self.price_spin.setMinimum(5000000)
 
         self.order_btn = QPushButton("현금주문", self)
 

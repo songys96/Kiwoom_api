@@ -20,6 +20,7 @@ class Kiwoom(QAxWidget):
     # 서버에 연결시 메서드 실행 슬롯(이벤트) 지정
     def _set_signal_slots(self):
         self.OnEventConnect.connect(self._event_connect)
+        self.OnReceiveTrData.connect(self._receive_tr_data)
         self.OnReceiveChejanData.connect(self._receive_chejan_data)
 
     # 메서드 실행시 서버에 연결
@@ -69,9 +70,11 @@ class Kiwoom(QAxWidget):
 
     # 요청하기
     # input(rqname:사용자구분명, trcode:Tran명, next:0-조회, 2-연속, screen_no:4자리화면번호)
-    def comm_rq_data(self, rqname, trcode, next, screen_no):
+    def comm_rq_data(self, rqname, trcode, continous, screen_no):
         # 이부분 닫는거 좀 이상함 17-3-2 일봉데이터연속조회 부분
-        self.dynamicCall("CommRqData(QString, QString, int, QString)",rqname, trcode, next, screen_no)
+        a= self.dynamicCall("CommRqData(QString, QString, int, QString)",rqname, trcode, continous, screen_no)
+
+        # -300 : 입력값 오류
         # ***PyQt에는 이벤트루프가 이미 있음
         self.tr_event_loop = QEventLoop()
         self.tr_event_loop.exec_()
@@ -90,7 +93,7 @@ class Kiwoom(QAxWidget):
         return ret
 
     # tr은 서버로부터 데이터를 주고받는 행위
-    def _receive_tr_data(self, screen_no, rqname, record_name, next, unused1, unused2, unused3, unused4):
+    def _receive_tr_data(self, screen_no, rqname, trcode, record_name, next, unused1, unused2, unused3, unused4):
         if next == "2":
             self.remained_data = True
         else:
@@ -138,6 +141,7 @@ class Kiwoom(QAxWidget):
     # 여기에서 single 의 경우 계좌의 잔고(위에 있는 한 줄)를 가져올 수 있음
     # multi의 경우 상세한 보유 현황을 가져 올것임
     def _opw00018(self, rqname, trcode):
+
         # single - 계좌의 정보
         total_purchase_price = self._comm_get_data(trcode, "", rqname, 0, "총매입금액")
         total_eval_price = self._comm_get_data(trcode, "", rqname, 0, "총평가금액")
@@ -157,7 +161,7 @@ class Kiwoom(QAxWidget):
 
 
         rows = self._get_repeat_cnt(trcode, rqname)
-        for i in rows:
+        for i in range(rows):
             name = self._comm_get_data(trcode, "", rqname, i, "종목명")
             quantity = self._comm_get_data(trcode, "", rqname, i, "보유수량")
             purchase_price = self._comm_get_data(trcode, "", rqname, i, "매입가")
@@ -172,6 +176,8 @@ class Kiwoom(QAxWidget):
             earning_rate = change_percentage_format(earning_rate)
 
             self.opw00018_output['multi'].append([name, quantity, purchase_price, current_price, eval_profit_loss_price, earning_rate])
+
+        print(self.opw00018_output)
 
     def get_server_gubun(self):
         ret = self.dynamicCall("KOA_Functions(QString, QString)", "GetServerGubun", "")
